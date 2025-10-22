@@ -2,38 +2,7 @@
 import numpy as np
 import torch
 from torch import nn, optim
-from torch.utils.data import Dataset, DataLoader
-
-# Example dataset: swap with own waveform source
-# like, typically, reading from file.
-# required functions are init(), len() and getitem() as below.
-class NoisyPulse(Dataset):
-    ''' custom dataset class: Gaussian noise waveform only. '''
-    def __init__(self):
-        super().__init__()
-        self.nsamples = 12000
-        self.rng = np.random.default_rng()
-        
-    def __len__(self):
-        return self.nsamples
-    
-    def __getitem__(self, index):  # all random noise, no index required
-        # noisy pulse
-        amp = self.rng.integers(1, 10)
-        clean = self._simplePulse(1000, amp)  # ndarray
-        target = torch.from_numpy(clean)  # Tensor
-        noisy_pulse = clean + 0.1*self.rng.standard_normal(
-            size=len(clean), dtype=np.float32)
-        return torch.from_numpy(noisy_pulse), target  # 1D waveform
-
-    def _simplePulse(self, length, amp):
-        time = np.arange(length, dtype=np.float32)
-        onset = 0.25*length
-        risetime  = 3
-        decaytime = 100
-        pulse = np.exp(-(time-onset)/risetime)-np.exp(-(time-onset)/decaytime)
-        pulse[np.where(time < onset)] = 0.0
-        return -amp * pulse
+from torch.utils.data import DataLoader
 
 
 class WrappedDataLoader:

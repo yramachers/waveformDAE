@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import daebase as dae
+import tables as tb
 
 # functions to produce an example waveform as input to the model.
 def simple_pulse(length, onset, amplitude, risetime, decaytime):
@@ -33,24 +34,38 @@ def convert_for_DAE(pulse):
     return data.view(-1, 1, data.shape[-1])  # add batch index to tensor
 
 
+def tryartificial():
+    # make one noisy pulse example as input to model.
+    samples = 1000
+    amp = 1.0
+    onset = 0.25 * samples
+    rt = 3.0
+    dt = 100.0
+    wfm, noisy_pulse = get_data_item(samples, onset, amp, rt, dt)
+    datain = convert_for_DAE(noisy_pulse)
+    return wfm, datain
+
+
+def tryfromfile(fname, index):
+    infile = tb.open_file(fname, mode="r")
+    table = infile.root.waveforms
+    row = table[index]
+    wfm = np.copy(row['waveform'])  # full copy
+    infile.close()
+    return convert_for_DAE(wfm)
+
+
 # Load and set up
 # Order is important: load, object instantiation, then load state dict.
 st_dict = torch.load("daemodel.pth", weights_only=True)
 mod = dae.DAE()
-
 mod.load_state_dict(st_dict)
 
 # Run forward pass from here
 mod.eval()
 
-# make one noisy pulse example as input to model.
-samples = 1000
-amp = 1.0
-onset = 0.25 * samples
-rt = 3.0
-dt = 100.0
-wfm, noisy_pulse = get_data_item(samples, onset, amp, rt, dt)
-datain = convert_for_DAE(noisy_pulse)
+wfm, datain = tryartificial()
+onset = 250  # for np.std()
 
 # use the single waveform as input to the model
 with torch.no_grad():

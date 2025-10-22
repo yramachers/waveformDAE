@@ -1,6 +1,7 @@
 ''' train/test DAE structures using pytorch '''
 import torch
 import daebase as dae
+import datareader as dr
 
 # main script
 # set up
@@ -10,7 +11,7 @@ batch_size = 24
 
 # pulse denoise; use bespoke data set object for different
 # training and validation data, e.g. read from file, see daebase.py.
-pset = dae.NoisyPulse()
+pset = dr.NoisyPulse()
 
 train_set, valid_set = dae.get_data(pset, pset, batch_size)  # get data loader objects
 train_dl = dae.WrappedDataLoader(train_set, dae.preprocess)  # run data loader output through function
